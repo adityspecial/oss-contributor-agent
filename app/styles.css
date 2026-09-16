@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono&family=Manrope:wght@400;600;700;800&display=swap');
+
+:root { color: #e8f0e9; background: #0e1712; font-family: Manrope, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 80% 0%, #245638 0%, transparent 30%), #0e1712; }
+main { max-width: 1080px; margin: auto; padding: 8rem 2rem; }
+.hero { max-width: 760px; }
+.eyebrow { color: #91d6a6; font: 12px 'DM Mono', monospace; letter-spacing: .16em; }
+h1 { font-size: clamp(3rem, 8vw, 6.6rem); margin: .4rem 0 1.3rem; letter-spacing: -.07em; line-height: .95; }
+.lead { font-size: 1.25rem; line-height: 1.65; color: #b8c6bc; max-width: 660px; }
+.button { display: inline-block; margin-top: 1.5rem; background: #b7f397; color: #102112; padding: .9rem 1.2rem; border-radius: .6rem; text-decoration: none; font-weight: 800; }
+.hint { color: #aec2b2; font-size: .9rem; } code { font-family: 'DM Mono', monospace; }
+.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 7rem; }
+.rules div { padding: 1.35rem; border: 1px solid #32503b; border-radius: .75rem; background: #14231a; }
+.rules strong, .rules span { display:block; } .rules span { margin-top: .5rem; color:#9eada2; line-height:1.5; font-size:.9rem; }
+@media (max-width: 720px) { main { padding-top: 4rem; } .rules { grid-template-columns: 1fr; margin-top: 4rem; } }
