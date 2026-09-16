@@ -1,39 +1,45 @@
 # OSS Contributor Agent
 
-A GitHub App–based service that scans approved repositories on a schedule and opens a pull request only for verified, low-risk improvements.
+A GitHub App-based service that autonomously scans approved repositories, produces one verified low-risk improvement, opens a pull request, and merges it when the repository's checks pass.
 
-## What it does
+## End-to-end flow
 
-1. A user installs the GitHub App on selected repositories.
-2. The app records the installation and selected repository IDs in Postgres.
-3. A scheduled job obtains a short-lived installation token, gathers repository context, and asks OpenAI for one safe candidate fix.
-4. The service validates the candidate, creates a branch and pull request, and records the run.
+Install GitHub App → selected repositories saved → twice-daily scan → candidate fix → branch + PR → target-repository CI checks pass → squash merge
 
-The application never stores a user personal-access token. It uses GitHub App installation tokens that are minted only while a scan is running.
+No human approval is needed in the normal path. A merge is deliberately blocked if there are no completed checks, a check fails, GitHub branch protection rejects it, or the proposed change violates policy.
+
+## Credentials and access
+
+The service never stores a user's personal access token.
+
+- A user installs the GitHub App only on chosen repositories.
+- The service records the installation ID and repository IDs in Postgres.
+- At scan time, it mints a short-lived GitHub App installation token.
+- OpenAI access uses a server-side API key held only in the deployment's encrypted environment secrets.
+- The browser receives neither credential.
+
+Create a GitHub App with repository permissions: Contents Read & write, Pull requests Read & write, Issues Read & write, and Metadata Read-only. Set its setup URL to https://YOUR_DOMAIN/api/github/setup.
 
 ## Local setup
 
-```bash
-npm install
-cp .env.example .env
-npm run dev
-```
-
-Create a GitHub App with repository permissions: `Contents: Read & write`, `Pull requests: Read & write`, `Issues: Read & write`, and `Metadata: Read-only`. Configure its setup URL as `https://YOUR_DOMAIN/api/github/setup`.
-
-Set the GitHub App's callback URL to `https://YOUR_DOMAIN/api/github/callback` if you later add user OAuth. This MVP uses the App-installation flow, which is sufficient for choosing repositories and creating pull requests.
+Run: npm install, then copy .env.example to .env, run npm run db:generate, npm run db:migrate, and npm run dev.
 
 ## Deployment
 
-- Deploy to Vercel (or another Node host).
-- Provision Postgres and set `DATABASE_URL`.
-- Add the values in `.env.example` as encrypted host secrets.
-- Configure the scheduler to call `POST /api/cron/scan` twice daily with `Authorization: Bearer $CRON_SECRET`.
+1. Deploy to a Node-compatible host such as Vercel.
+2. Provision Postgres and configure DATABASE_URL.
+3. Add every value in .env.example as an encrypted deployment secret.
+4. Configure a twice-daily scheduler to call POST /api/cron/scan with Authorization: Bearer $CRON_SECRET. Vercel uses vercel.json automatically.
+5. Enable CI checks in every connected target repository.
 
-## Safety controls
+## Automatic merge prerequisites
 
-- Only repositories explicitly connected through the app are scanned.
-- One PR at most per repository per day.
-- Generated changes are limited to a single text file and must include a test plan.
-- The agent cannot merge, delete branches, change workflows, or alter dependency lockfiles.
-- Production use should add a sandboxed checkout and test runner before enabling automatic PRs.
+For full automation, each target repository must permit the GitHub App to create and merge pull requests and must have at least one required CI check. Do not require a human review from the App itself: GitHub will correctly reject a self-approved PR. Branch protection remains the final authority.
+
+## Guardrails
+
+- Only repositories selected during GitHub App installation are scanned.
+- One agent PR per repository per 24 hours.
+- The agent edits exactly one existing source or test file.
+- It cannot touch workflows, lock files, deployment configuration, credentials, or infrastructure.
+- It uses squash merge only after all reported checks are completed with success, neutral, or skipped.
