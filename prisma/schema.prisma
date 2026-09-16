@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Installation {
+  id        String       @id
+  account   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  repos     Repository[]
+}
+
+model Repository {
+  id             String       @id
+  fullName       String       @unique
+  defaultBranch  String
+  installationId String
+  installation   Installation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  enabled        Boolean      @default(true)
+  lastScannedAt  DateTime?
+  scans          Scan[]
+  createdAt      DateTime     @default(now())
+}
+
+model Scan {
+  id           String     @id @default(cuid())
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  status       String
+  summary      String?
+  pullRequest  Int?
+  createdAt    DateTime   @default(now())
+}
