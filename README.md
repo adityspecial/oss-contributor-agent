@@ -4,7 +4,7 @@ A GitHub App-based service that autonomously scans approved repositories, produc
 
 ## End-to-end flow
 
-Install GitHub App → selected repositories saved → twice-daily scan → candidate fix → branch + PR → target-repository CI checks pass → squash merge
+Install GitHub App → selected repositories saved → twice-daily scan → candidate fix → branch + PR → target-repository CI checks pass → signed GitHub webhook → squash merge
 
 No human approval is needed in the normal path. A merge is deliberately blocked if there are no completed checks, a check fails, GitHub branch protection rejects it, or the proposed change violates policy.
 
@@ -18,7 +18,14 @@ The service never stores a user's personal access token.
 - OpenAI access uses a server-side API key held only in the deployment's encrypted environment secrets.
 - The browser receives neither credential.
 
-Create a GitHub App with repository permissions: Contents Read & write, Pull requests Read & write, Issues Read & write, and Metadata Read-only. Set its setup URL to https://YOUR_DOMAIN/api/github/setup.
+Create a GitHub App with repository permissions: Contents Read & write, Pull requests Read & write, Issues Read & write, and Metadata Read-only.
+
+Configure the app URLs:
+
+- Setup URL: https://YOUR_DOMAIN/api/github/setup
+- Webhook URL: https://YOUR_DOMAIN/api/github/webhook
+- Webhook secret: the same value as GITHUB_WEBHOOK_SECRET
+- Events: Check suite
 
 ## Local setup
 
